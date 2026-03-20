@@ -9,6 +9,7 @@ const passHint = document.getElementById('pass-hint');
 const loginScreen = document.getElementById('login-screen');
 const gameScreen = document.getElementById('game-screen');
 const gridContainer = document.getElementById('grid-screen');
+const lastUpdateTime = document.getElementById('last-update');
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
@@ -150,6 +151,7 @@ function startListening() {
 }
 
 async function updateUI(roomState) {
+    lastUpdateTime.innerText = new Date().toLocaleTimeString();
     for (let f = 1; f <= 10; f++) {
         for (let p = 1; p <= 4; p++) {
             const data = roomState[`f${f}`]?.[`p${p}`];
@@ -160,10 +162,8 @@ async function updateUI(roomState) {
             const btn = document.getElementById(`b-${tileId}`);
             if (data.owner && ["0", "1", "2", "3"].includes(data.owner.toString())) {
                 btn.style.backgroundColor = `var(--p${Number(data.owner) + 1})`;
-                btn.style.color = "#fff";
             } else {
                 btn.style.backgroundColor = `var(--input-bg)`;
-                btn.style.color = `var(--text-btn-defult)`;
             }
 
             if (data && data.flags && Array.isArray(data.flags)) {
@@ -189,19 +189,26 @@ async function updateUI(roomState) {
 }
 
 async function handleTileClaim(floor, platform) {
-    const path = `rooms/${currentRoom}/room_state/f${floor}/p${platform}`;
-    const ownerRef = ref(db, `${path}/owner`);
+    const floorPath = `rooms/${currentRoom}/room_state/f${floor}`;
+    const targetPath = `${floorPath}/p${platform}`;
     try {
-        const snapshot = await get(ownerRef);
-        const currentRemoteOwner = snapshot.exists() ? snapshot.val().toString() : "-1";
+        const floorSnapshot = await get(ref(db, floorPath));
+        const floorData = floorSnapshot.val() || {};
 
         const updates = {};
         updates[`rooms/${currentRoom}/metadata/password`] = currentPass;
+        const myId = currentUser.toString();
+        const currentTargetOwner = floorData[`p${platform}`]?.owner?.toString() || "-1";
 
-        if (currentRemoteOwner === currentUser.toString()) {
-            updates[`${path}/owner`] = "-1";
+        if (currentTargetOwner === myId) {
+            updates[`${targetPath}/owner`] = "-1";
         } else {
-            updates[`${path}/owner`] = String(currentUser);
+            for (let pIdx = 1; pIdx <= 4; pIdx++) {
+                if (floorData[`p${pIdx}`]?.owner?.toString() === myId) {
+                    updates[`${floorPath}/p${pIdx}/owner`] = "-1";
+                }
+            }
+            updates[`${targetPath}/owner`] = myId;
         }
         await update(ref(db), updates);
     } catch (e) {

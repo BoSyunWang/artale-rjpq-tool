@@ -157,7 +157,7 @@ body {
     padding: 12px 5px;
     text-align: center;
     background: #333;
-    color: #000;
+    color: var(--text-btn-defult);
     border-radius: 6px;
     cursor: pointer;
     font-weight: bold;
@@ -183,12 +183,11 @@ body {
 
 #grid-screen {
     display: grid;
-    grid-template-columns: 20px repeat(4, 1fr);
-    gap: 5px;
+    grid-template-columns: 40px repeat(4, 1fr);
+    gap: 2px;
     width: 100%;
     max-width: 360;
     align-items: center;
-    margin-bottom: 20px;
 }
 
 .floor-label, .title_column, .door-btn {
@@ -197,7 +196,7 @@ body {
     align-items: center;
     height: 20px;
     text-align: center;
-    font-size: 15px;
+    font-size: 30px;
     width: 100%;
 }
 
@@ -252,4 +251,8 @@ body {
 
 .door-btn:hover {
     border-color: #666;
+}
+
+.action {
+    margin-top: 30px;
 }
