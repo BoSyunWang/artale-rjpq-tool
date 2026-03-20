@@ -13,13 +13,13 @@ const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
 let currentRoom = "";
+let currentPass = "";
 let currentUser = "";
-let userColors = {};
 
 async function loadUserConfigs() {
     const res = await fetch('user_config.json');
     const data = await res.json();
-    userColors = data.player_colors;
+    // User Name
 }
 
 window.onload = () => {
@@ -31,18 +31,36 @@ window.onload = () => {
     validateInputs();
 };
 
-document.getElementById('btn-enter').onclick = () => {
+document.getElementById('btn-enter').onclick = async () => {
     let finalRoom = roomIdInput.value;
     let finalPass = roomPassInput.value;
 
     if (finalRoom === "" && finalPass === "") {
         finalRoom = Math.floor(100000 + Math.random() * 900000).toString();
         finalPass = Math.floor(1000 + Math.random() * 9000).toString();
-
     }
 
-    window.history.pushState({}, '', `?room=${finalRoom}`);
-    startApp(finalRoom, finalPass);
+    currentRoom = finalRoom;
+    currentPass = finalPass
+
+    const roomMetadataRef = ref(db, `rooms/${currentRoom}/metadata`);
+    const roomRef = ref(db, `rooms/${currentRoom}`);
+    try {
+        const snapshot = await get(roomRef);
+        if (!snapshot.exists()) {
+        await set(ref(db, `rooms/${currentRoom}/metadata`), {
+            password: currentPass,
+            created_at: Date.now()
+        });
+        } else {
+            await update(roomMetadataRef, { password: currentPass });
+        }
+        window.history.pushState({}, '', `?room=${currentRoom}`);
+        startApp(currentRoom, currentPass);
+    } catch(error) {
+        console.error("Firebase Auth Error:", error);
+        alert("進入失敗：密碼錯誤或無法建立房間。");
+    }
 };
 
 function startApp(room, pass) {
