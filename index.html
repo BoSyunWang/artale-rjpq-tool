@@ -3,25 +3,63 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Real-time Grid Sync</title>
+    <title>RJPQ Tool</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <div id="login-screen" class="container">
-        <h2>進入房間</h2>
-        <input type="text" id="room-id" placeholder="房間號碼">
-        <input type="password" id="room-pass" placeholder="密碼">
-        <input type="text" id="user-name" placeholder="你的名稱">
-        <button id="btn-join">建立 / 進入</button>
+    <div id="login-screen" class="login-container">
+        <h2 style="margin-bottom: 20px;">RJPQ 小工具</h2>
+        <div class="input-group">
+            <label>房間號碼</label>
+            <input type="text" id="room-id"
+               maxlength="6"
+               inputmode="numeric"
+               oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+        </div>
+
+        <div class="input-group">
+            <label>房間密碼</label>
+            <input type="password" id="room-pass"
+               maxlength="4"
+               inputmode="numeric">
+            <small id="pass-hint" class="hint">全留空將由系統自動產出房號與密碼</small>
+        </div>
+
+        <button id="btn-enter" class="btn-primary state-create">自動生成房間</button>
     </div>
 
-    <div id="game-screen" class="container hidden">
-        <div class="header">
-            <h3>房間: <span id="display-room"></span> | 玩家: <span id="display-user"></span></h3>
-            <p id="last-update">最後更新: 無</p>
-        </div>
-        <div id="grid-container" class="grid-5x5">
+    <div id="game-screen" class="hidden game-screen-container">
+        <h3 style="margin: 5px 0; text-align: center;">研究室走廊 紀錄器</h3>
+
+        <div class="room-info">
+            <div class="info-top-row">
+                <span>房間號碼：<b id="room-display">-</b></span>
+                <span>房間密碼：<b id="room-display-pass">-</b></span>
             </div>
+            <div class="info-bottom-row">
+                <span>最後更新：<b id="last-update">-</b></span>
+            </div>
+        </div>
+
+        <div class="player-selector">
+            <input type="radio" name="p" id="p1" value="1" class="p-radio" checked>
+            <label for="p1" class="p-label l1">P1 紅</label>
+            <input type="radio" name="p" id="p2" value="2" class="p-radio">
+            <label for="p2" class="p-label l2">P2 藍</label>
+            <input type="radio" name="p" id="p3" value="3" class="p-radio">
+            <label for="p3" class="p-label l3">P3 綠</label>
+            <input type="radio" name="p" id="p4" value="4" class="p-radio">
+            <label for="p4" class="p-label l4">P4 黃</label>
+        </div>
+
+        <div id="grid-screen" class="grid-container">
+
+        </div>
+
+        <div class="btn-group">
+            <button class="action" id="btn-copy">複製連結</button>
+            <button class="action" id="btn-reset" style="background:#422; color:#f88;">清空</button>
+        </div>
     </div>
 
     <script type="importmap">

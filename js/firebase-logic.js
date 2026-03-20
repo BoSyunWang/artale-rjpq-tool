@@ -2,7 +2,13 @@ import { initializeApp } from "firebase/app";
 import { getDatabase, ref, set, get, onValue, update } from "firebase/database";
 import { firebaseConfig } from "../config.js";
 
-// 初始化
+const roomIdInput = document.getElementById('room-id');
+const roomPassInput = document.getElementById('room-pass');
+const enterBtn = document.getElementById('btn-enter');
+const passHint = document.getElementById('pass-hint');
+const loginScreen = document.getElementById('login-screen');
+const gameScreen = document.getElementById('game-screen');
+const gridContainer = document.getElementById('grid-screen');
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
@@ -10,107 +16,77 @@ let currentRoom = "";
 let currentUser = "";
 let userColors = {};
 
-// 1. 載入 User Config
 async function loadUserConfigs() {
     const res = await fetch('user_config.json');
     const data = await res.json();
     userColors = data.player_colors;
 }
 
-// 2. URL 參數自動帶入
 window.onload = () => {
     loadUserConfigs();
     const params = new URLSearchParams(window.location.search);
     if (params.has('room')) {
-        document.getElementById('room-id').value = params.get('room');
+        roomIdInput.value = params.get('room');
     }
+    validateInputs();
 };
 
-// 3. 建立或加入房間
-document.getElementById('btn-join').onclick = async () => {
-    const roomId = document.getElementById('room-id').value;
-    const pass = document.getElementById('room-pass').value;
-    const name = document.getElementById('user-name').value;
+document.getElementById('btn-enter').onclick = () => {
+    let finalRoom = roomIdInput.value;
+    let finalPass = roomPassInput.value;
 
-    if (!roomId || !pass || !name) return alert("請填寫所有欄位");
+    if (finalRoom === "" && finalPass === "") {
+        finalRoom = Math.floor(100000 + Math.random() * 900000).toString();
+        finalPass = Math.floor(1000 + Math.random() * 9000).toString();
 
-    const roomRef = ref(db, `rooms/${roomId}`);
-    const snapshot = await get(roomRef);
-
-    if (snapshot.exists()) {
-        // 驗證密碼
-        if (snapshot.val().metadata.password !== pass) {
-            return alert("密碼錯誤！");
-        }
-    } else {
-        // 初始化新房間
-        await set(roomRef, {
-            metadata: { password: pass, created_at: Date.now() },
-            user_configs: {},
-            room_state: {}
-        });
     }
 
-    // 登入成功，更新使用者色卡到 Firebase (邏輯解耦)
-    const color = userColors[name] || userColors["default"];
-    await update(ref(db, `rooms/${roomId}/user_configs/${name}`), { color: color });
-
-    currentRoom = roomId;
-    currentUser = name;
-    startSync();
+    window.history.pushState({}, '', `?room=${finalRoom}`);
+    startApp(finalRoom, finalPass);
 };
 
-// 4. 即時同步邏輯
-function startSync() {
-    document.getElementById('login-screen').classList.add('hidden');
-    document.getElementById('game-screen').classList.remove('hidden');
-    document.getElementById('display-room').innerText = currentRoom;
-    document.getElementById('display-user').innerText = currentUser;
+function startApp(room, pass) {
+    loginScreen.classList.add('hidden');
+    gameScreen.classList.remove('hidden');
+    document.getElementById('room-display').innerText = room;
+    document.getElementById('room-display-pass').innerText = pass;
 
-    const roomStateRef = ref(db, `rooms/${currentRoom}`);
-
-    // 監聽數據變動
-    onValue(roomStateRef, (snapshot) => {
-        const data = snapshot.val();
-        renderGrid(data.room_state || {}, data.user_configs || {});
-        if (data.metadata.last_updated_by) {
-            document.getElementById('last-update').innerText = `最後更新: ${data.metadata.last_updated_by}`;
-        }
-    });
+    initGrid();
+    //startListening();
 }
 
-// 5. 渲染網格
-function renderGrid(states, configs) {
-    const container = document.getElementById('grid-container');
-    container.innerHTML = "";
+function initGrid() {
+    gridContainer.innerHTML = '';
 
-    for (let i = 1; i <= 25; i++) {
-        const tileId = `tile_${i}`;
-        const state = states[tileId] || { status: "empty" };
+    const title = document.createElement('div');
+    title.innerText = "層";
+    title.className = "title_column";
+    gridContainer.appendChild(title);
 
-        const div = document.createElement('div');
-        div.className = `tile ${state.status}`;
-        div.innerHTML = `<span>${state.user || i}</span><button class="btn-skip">Skip</button>`;
+    for(let col_num = 1; col_num <= 4; col_num++) {
+        const title_col = document.createElement('div');
+        title_col.className = 'title_column';
+        title_col.innerText = col_num;
+        gridContainer.appendChild(title_col);
+    }
 
-        // 應用玩家顏色
-        if (state.status === 'claimed' && configs[state.user]) {
-            div.style.backgroundColor = configs[state.user].color;
+    for (let f = 10; f >= 1; f--) {
+        const label = document.createElement('div');
+        label.className = 'floor-label';
+        label.innerText = f;
+        gridContainer.appendChild(label);
+
+        for (let d = 1; d <= 4; d++) {
+            const btn = document.createElement('button');
+            btn.className = 'door-btn';
+            btn.id = `b-${f}-${d}`;
+            btn.innerText = d;
+            //btn.onclick = () => handleToggle(f, d);
+            gridContainer.appendChild(btn);
         }
-
-        // Claim 事件 (點擊格子)
-        div.onclick = (e) => {
-            if (e.target.className === 'btn-skip') {
-                updateState(tileId, 'skipped');
-            } else {
-                updateState(tileId, 'claimed');
-            }
-        };
-
-        container.appendChild(div);
     }
 }
 
-// 6. 更新狀態到 Firebase
 async function updateState(tileId, status) {
     const updates = {};
     updates[`rooms/${currentRoom}/room_state/${tileId}`] = {
@@ -122,3 +98,39 @@ async function updateState(tileId, status) {
 
     await update(ref(db), updates);
 }
+
+function validateInputs() {
+    const rLen = roomIdInput.value.length;
+    const pLen = roomPassInput.value.length;
+
+    const isEmptyMode = (rLen === 0 && pLen === 0);
+    const isFullMode = (rLen === 6 && pLen === 4);
+
+    enterBtn.classList.remove('state-create', 'state-join');
+
+    if (isEmptyMode) {
+        enterBtn.disabled = false;
+        enterBtn.innerText = "自動生成房間";
+        enterBtn.style.background = "linear-gradient(135deg, #4caf50, #388e3c)";
+        passHint.innerText = "✨ 將自動產生 6 位房號與 4 位密碼";
+        enterBtn.classList.add('state-create');
+    } else if (isFullMode) {
+        enterBtn.disabled = false;
+        enterBtn.innerText = "驗證並進入";
+        enterBtn.style.background = "linear-gradient(135deg, #448aff, #2979ff)";
+        passHint.innerText = "🔒 格式正確，準備連線";
+        enterBtn.classList.add('state-join');
+    } else {
+        enterBtn.disabled = true;
+        enterBtn.innerText = "格式不符";
+        enterBtn.style.background = "#333";
+        passHint.innerText = "需為「全留空」或「6位房號+4位密碼」";
+    }
+}
+
+[roomIdInput, roomPassInput].forEach(el => {
+    el.addEventListener('input', (e) => {
+        e.target.value = e.target.value.replace(/[^0-9]/g, '');
+        validateInputs();
+    });
+});
