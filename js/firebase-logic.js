@@ -14,12 +14,26 @@ const db = getDatabase(app);
 
 let currentRoom = "";
 let currentPass = "";
-let currentUser = "";
+let currentUser = Number(document.querySelector('input[name="p-select"]:checked').value);
+
+document.querySelectorAll('input[name="p-select"]').forEach(radio => {
+    radio.addEventListener('change', async (e) => {
+        currentUser = Number(e.target.value);
+        const roomRef = ref(db, `rooms/${currentRoom}/room_state`);
+        try {
+            const snapshot = await get(roomRef);
+            if (snapshot.exists()) {
+                updateUI(snapshot.val());
+            }
+        } catch (error) {
+            console.error("抓取資料失敗:", error);
+        }
+    });
+});
 
 async function loadUserConfigs() {
     const res = await fetch('user_config.json');
     const data = await res.json();
-    // User Name
 }
 
 window.onload = () => {
@@ -71,7 +85,7 @@ function startApp(room, pass) {
     document.getElementById('room-display-pass').innerText = pass;
 
     initGrid();
-    //startListening();
+    startListening();
 }
 
 function initGrid() {
@@ -95,30 +109,31 @@ function initGrid() {
         label.innerText = f;
         gridContainer.appendChild(label);
 
-        for (let d = 1; d <= 4; d++) {
+        for (let p = 1; p <= 4; p++) {
+            const tileId = `${f}-${p}`;
             const cellWrapper = document.createElement('div');
             cellWrapper.className = 'cell-wrapper';
-            cellWrapper.id = `cell-${f}-${d}`;
+            cellWrapper.id = `cell-${f}-${p}`;
 
             const indicatorGrid = document.createElement('div');
             indicatorGrid.className = 'indicator-grid';
-            for(let p = 1; p <= 4; p++) {
+            for(let p2 = 1; p2 <= 4; p2++) {
                 const light = document.createElement('div');
-                light.className = `status-light light-p${p}`;
-                light.id = `light-${f}-${d}-p${p}`;
+                light.className = `status-light p${p2}`;
+                light.id = `light-${tileId}-p${p2}`;
                 indicatorGrid.appendChild(light);
             }
 
             indicatorGrid.onclick = (e) => {
                 e.stopPropagation();
-                //handleFlagToggle(f, d);
+                handleFlagToggle(f, p);
             };
 
             const btn = document.createElement('button');
             btn.className = 'door-btn';
-            btn.id = `b-${f}-${d}`;
-            btn.innerText = d;
-            //btn.onclick = () => handleToggle(f, d);
+            btn.id = `b-${f}-${p}`;
+            btn.innerText = p;
+            btn.onclick = () => handleTileClaim(f, p);
             cellWrapper.appendChild(indicatorGrid);
             cellWrapper.appendChild(btn);
             gridContainer.appendChild(cellWrapper);
@@ -126,16 +141,94 @@ function initGrid() {
     }
 }
 
-async function updateState(tileId, status) {
-    const updates = {};
-    updates[`rooms/${currentRoom}/room_state/${tileId}`] = {
-        status: status,
-        user: currentUser,
-        timestamp: Date.now()
-    };
-    updates[`rooms/${currentRoom}/metadata/last_updated_by`] = currentUser;
+function startListening() {
+    const roomStateRef = ref(db, `rooms/${currentRoom}/room_state`);
+    onValue(roomStateRef, (snapshot) => {
+        const data = snapshot.val() || {};
+        updateUI(data);
+    });
+}
 
-    await update(ref(db), updates);
+async function updateUI(roomState) {
+    for (let f = 1; f <= 10; f++) {
+        for (let p = 1; p <= 4; p++) {
+            const data = roomState[`f${f}`]?.[`p${p}`];
+            if (!data) continue;
+
+            const tileId = `${f}-${p}`;
+
+            const btn = document.getElementById(`b-${tileId}`);
+            if (data.owner && ["0", "1", "2", "3"].includes(data.owner.toString())) {
+                btn.style.backgroundColor = `var(--p${Number(data.owner) + 1})`;
+                btn.style.color = "#fff";
+            } else {
+                btn.style.backgroundColor = `var(--input-bg)`;
+                btn.style.color = `var(--text-btn-defult)`;
+            }
+
+            if (data && data.flags && Array.isArray(data.flags)) {
+                data.flags.forEach((isTrue, index) => {
+                    const playerNum = index;
+                    const light = document.getElementById(`light-${tileId}-p${playerNum + 1}`);
+                    if (light) {
+                        if (isTrue) {
+                            light.classList.add('active');
+                        } else {
+                            light.classList.remove('active');
+                        }
+                    }
+                });
+            } else {
+                for (let p = 1; p <= 4; p++) {
+                    const light = document.getElementById(`light-${tileId}-p${p}`);
+                    if (light) light.classList.remove('active');
+                }
+            }
+        }
+    }
+}
+
+async function handleTileClaim(floor, platform) {
+    const path = `rooms/${currentRoom}/room_state/f${floor}/p${platform}`;
+    const ownerRef = ref(db, `${path}/owner`);
+    try {
+        const snapshot = await get(ownerRef);
+        const currentRemoteOwner = snapshot.exists() ? snapshot.val().toString() : "-1";
+
+        const updates = {};
+        updates[`rooms/${currentRoom}/metadata/password`] = currentPass;
+
+        if (currentRemoteOwner === currentUser.toString()) {
+            updates[`${path}/owner`] = "-1";
+        } else {
+            updates[`${path}/owner`] = String(currentUser);
+        }
+        await update(ref(db), updates);
+    } catch (e) {
+        console.error("Firebase Update Error:", e);
+        alert("操作失敗，請檢查密碼或網路連線");
+    }
+}
+
+async function handleFlagToggle(floor, platform) {
+    if (isNaN(currentUser) || currentUser < 0 || currentUser > 3) {
+        console.error("無效的使用者編號:", currentUser);
+        return;
+    }
+    const flagRef = ref(db, `rooms/${currentRoom}/room_state/f${floor}/p${platform}/flags`);
+    const snapshot = await get(flagRef);
+    let currentFlags = snapshot.val() || [false, false, false, false];
+    currentFlags[currentUser] = !currentFlags[currentUser];
+
+    const updates = {};
+    updates[`rooms/${currentRoom}/metadata/password`] = currentPass;
+    updates[`rooms/${currentRoom}/room_state/f${floor}/p${platform}/flags`] = currentFlags;
+
+    try {
+        await update(ref(db), updates);
+    } catch (e) {
+        alert("同步失敗，請確認密碼是否正確");
+    }
 }
 
 function validateInputs() {

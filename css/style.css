@@ -4,6 +4,7 @@
     --input-bg: #2a2a2a;
     --text-default: #ffffff;
     --text-dim: #bbbbbb;
+    --text-btn-defult: #555555;
     --p1: #ff5252;
     --p2: #448aff;
     --p3: #69f0ae;
@@ -238,11 +239,11 @@ body {
     flex: 2;
     width: 100%;
     height: 60px;
-    background: #2a2a2a;
+    background: var(--input-bg);
     border: none;
     border-top: 1px solid #ccc;
     border-radius: 6px;
-    color: #555;
+    color: var(--text-btn-defult);
     font-size: 1.2rem;
     font-weight: bold;
     cursor: pointer;
@@ -251,5 +252,4 @@ body {
 
 .door-btn:hover {
     border-color: #666;
-    background: #333;
 }
