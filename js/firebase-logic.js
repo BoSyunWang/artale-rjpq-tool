@@ -27,6 +27,7 @@ window.onload = () => {
     const params = new URLSearchParams(window.location.search);
     if (params.has('room')) {
         roomIdInput.value = params.get('room');
+        roomPassInput.focus();
     }
     validateInputs();
 };
