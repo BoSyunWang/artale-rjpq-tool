@@ -1,0 +1,9 @@
+{
+  "player_colors": {
+    "default": "#3498db",
+    "Alice": "#e74c3c",
+    "Bob": "#2ecc71",
+    "Charlie": "#f1c40f",
+    "Admin": "#9b59b6"
+  }
+}

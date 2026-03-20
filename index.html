@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-time Grid Sync</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div id="login-screen" class="container">
+        <h2>進入房間</h2>
+        <input type="text" id="room-id" placeholder="房間號碼">
+        <input type="password" id="room-pass" placeholder="密碼">
+        <input type="text" id="user-name" placeholder="你的名稱">
+        <button id="btn-join">建立 / 進入</button>
+    </div>
+
+    <div id="game-screen" class="container hidden">
+        <div class="header">
+            <h3>房間: <span id="display-room"></span> | 玩家: <span id="display-user"></span></h3>
+            <p id="last-update">最後更新: 無</p>
+        </div>
+        <div id="grid-container" class="grid-5x5">
+            </div>
+    </div>
+
+    <script type="importmap">
+    {
+      "imports": {
+        "firebase/app": "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js",
+        "firebase/database": "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js"
+      }
+    }
+    </script>
+    <script type="module" src="js/firebase-logic.js"></script>
+</body>
+</html>
