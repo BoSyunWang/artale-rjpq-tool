@@ -1,10 +1,9 @@
-// config.js
 export const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_PROJECT.firebaseapp.com",
-    databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
-    projectId: "YOUR_PROJECT",
-    storageBucket: "YOUR_PROJECT.appspot.com",
-    messagingSenderId: "...",
-    appId: "..."
+    apiKey: "AIzaSyAoBAC26VAVEjyBH-CoYYF8xiFBwr0Lkyo",
+    authDomain: "artale-rjpq-tool-a8d7b.firebaseapp.com",
+    databaseURL: "https://artale-rjpq-tool-a8d7b-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "artale-rjpq-tool-a8d7b",
+    storageBucket: "artale-rjpq-tool-a8d7b.firebasestorage.app",
+    messagingSenderId: "449909060805",
+    appId: "1:449909060805:web:3c352b29661d49d3312cac"
 };
