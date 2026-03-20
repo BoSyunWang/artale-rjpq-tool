@@ -77,12 +77,32 @@ function initGrid() {
         gridContainer.appendChild(label);
 
         for (let d = 1; d <= 4; d++) {
+            const cellWrapper = document.createElement('div');
+            cellWrapper.className = 'cell-wrapper';
+            cellWrapper.id = `cell-${f}-${d}`;
+
+            const indicatorGrid = document.createElement('div');
+            indicatorGrid.className = 'indicator-grid';
+            for(let p = 1; p <= 4; p++) {
+                const light = document.createElement('div');
+                light.className = `status-light light-p${p}`;
+                light.id = `light-${f}-${d}-p${p}`;
+                indicatorGrid.appendChild(light);
+            }
+
+            indicatorGrid.onclick = (e) => {
+                e.stopPropagation();
+                //handleFlagToggle(f, d);
+            };
+
             const btn = document.createElement('button');
             btn.className = 'door-btn';
             btn.id = `b-${f}-${d}`;
             btn.innerText = d;
             //btn.onclick = () => handleToggle(f, d);
-            gridContainer.appendChild(btn);
+            cellWrapper.appendChild(indicatorGrid);
+            cellWrapper.appendChild(btn);
+            gridContainer.appendChild(cellWrapper);
         }
     }
 }
