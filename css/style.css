@@ -187,6 +187,7 @@ body {
     width: 100%;
     max-width: 360;
     align-items: center;
+    margin-bottom: 20px;
 }
 
 .floor-label, .title_column, .door-btn {
@@ -195,6 +196,8 @@ body {
     align-items: center;
     height: 20px;
     text-align: center;
+    font-size: 15px;
+    width: 100%;
 }
 
 .door-btn {
