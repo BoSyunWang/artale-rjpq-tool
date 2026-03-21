@@ -69,16 +69,27 @@ document.getElementById('btn-reset').onclick = async () => {
 };
 
 async function loadUserConfigs() {
+    //TODO setup user_config in room
     const res = await fetch('user_config.json');
     const data = await res.json();
 }
 
 window.onload = () => {
-    loadUserConfigs();
+    //loadUserConfigs();
     const params = new URLSearchParams(window.location.search);
-    if (params.has('room')) {
-        roomIdInput.value = params.get('room');
-        roomPassInput.focus();
+    const urlRoom = params.get('room');
+    const savedRoom = localStorage.getItem('savedRoomId');
+    const savedPass = localStorage.getItem('savedPassword');
+
+    if (savedRoom && savedPass && (urlRoom === savedRoom)) {
+        currentRoom = savedRoom;
+        currentPass = savedPass;
+        startApp(currentRoom, currentPass);
+        return;
+    }
+    if (urlRoom) {
+        roomIdInput.value = urlRoom;
+        setTimeout(() => roomPassInput.focus(), 100);
     }
     validateInputs();
 };
@@ -121,6 +132,8 @@ function startApp(room, pass) {
     document.getElementById('room-display').innerText = room;
     document.getElementById('room-display-pass').innerText = pass;
 
+    localStorage.setItem('savedRoomId', room);
+    localStorage.setItem('savedPassword', pass);
     initGrid();
     startListening();
 }
