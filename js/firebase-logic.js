@@ -32,6 +32,42 @@ document.querySelectorAll('input[name="p-select"]').forEach(radio => {
     });
 });
 
+document.getElementById('btn-laddy').onclick = () => {
+    window.location.href = 'index.html';
+};
+
+document.getElementById('btn-copy').onclick = async () => {
+    try {
+        await navigator.clipboard.writeText(window.location.href);
+        const btn = document.getElementById('btn-copy');
+        const originalText = btn.innerText;
+        btn.innerText = "已複製！";
+        setTimeout(() => btn.innerText = originalText, 2000);
+    } catch (err) {
+        alert("複製失敗，請手動複製網址");
+    }
+};
+
+document.getElementById('btn-reset').onclick = async () => {
+    if (!confirm("確定要清空整間房的佔領狀態與標記嗎？")) return;
+
+    const updates = {};
+    updates[`rooms/${currentRoom}/metadata/password`] = currentPass;
+
+    for (let f = 1; f <= 10; f++) {
+        for (let p = 1; p <= 4; p++) {
+            const path = `rooms/${currentRoom}/room_state/f${f}/p${p}`;
+            updates[`${path}/owner`] = "-1";
+            updates[`${path}/flags`] = [false, false, false, false];
+        }
+    }
+    try {
+        await update(ref(db), updates);
+    } catch (e) {
+        alert("清空失敗，權限不足或密碼錯誤");
+    }
+};
+
 async function loadUserConfigs() {
     const res = await fetch('user_config.json');
     const data = await res.json();
