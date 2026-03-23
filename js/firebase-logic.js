@@ -205,8 +205,8 @@ const updateDebug = (msg) => {
     const debugBox = document.getElementById('debug-box');
     if (!debugBox) return;
 
-    eventLogs.unshift(`${new Date().getMilliseconds()}ms: ${msg}`);
-    if (eventLogs.length > 6) eventLogs.pop();
+    eventLogs.unshift(`${Date.now()}: ${msg}`);
+    if (eventLogs.length > 12) eventLogs.pop();
 
     debugBox.innerHTML = eventLogs.join('<br>');
 };
