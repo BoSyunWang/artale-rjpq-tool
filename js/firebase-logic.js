@@ -183,7 +183,7 @@ function initGrid() {
             btn.className = 'door-btn';
             btn.id = `b-${f}-${p}`;
             btn.innerText = p;
-            btn.onclick = () => handleTileClaim(f, p);
+            bindTileEvents(btn, f, p);
             cellWrapper.appendChild(indicatorGrid);
             cellWrapper.appendChild(btn);
             gridContainer.appendChild(cellWrapper);
@@ -197,6 +197,35 @@ function startListening() {
         const data = snapshot.val() || {};
         updateUI(data);
     });
+}
+
+function bindTileEvents(btn, f, p) {
+    let timer;
+    let isLongPress = false;
+
+    const start = (e) => {
+        isLongPress = false;
+        timer = setTimeout(() => {
+            isLongPress = true;
+            handleFlagToggle(f, p);
+        }, 300);
+    };
+
+    const cancel = (e) => {
+        clearTimeout(timer);
+        if (!isLongPress && e.type === 'mouseup') {
+            handleTileClaim(f, p);
+        }
+    };
+
+    btn.addEventListener('mousedown', start);
+    btn.addEventListener('mouseup', cancel);
+    btn.addEventListener('mouseleave', () => clearTimeout(timer));
+
+    btn.addEventListener('touchstart', start, { passive: true });
+    btn.addEventListener('touchend', cancel, { passive: true });
+
+    btn.addEventListener('contextmenu', e => e.preventDefault());
 }
 
 async function updateUI(roomState) {
@@ -271,16 +300,15 @@ async function handleFlagToggle(floor, platform) {
         console.error("無效的使用者編號:", currentUser);
         return;
     }
-    const flagRef = ref(db, `rooms/${currentRoom}/room_state/f${floor}/p${platform}/flags`);
-    const snapshot = await get(flagRef);
-    let currentFlags = snapshot.val() || [false, false, false, false];
-    currentFlags[currentUser] = !currentFlags[currentUser];
-
-    const updates = {};
-    updates[`rooms/${currentRoom}/metadata/password`] = currentPass;
-    updates[`rooms/${currentRoom}/room_state/f${floor}/p${platform}/flags`] = currentFlags;
-
     try {
+        const flagRef = ref(db, `rooms/${currentRoom}/room_state/f${floor}/p${platform}/flags`);
+        const snapshot = await get(flagRef);
+        let currentFlags = snapshot.val() || [false, false, false, false];
+        currentFlags[currentUser] = !currentFlags[currentUser];
+
+        const updates = {};
+        updates[`rooms/${currentRoom}/metadata/password`] = currentPass;
+        updates[`rooms/${currentRoom}/room_state/f${floor}/p${platform}/flags`] = currentFlags;
         await update(ref(db), updates);
     } catch (e) {
         alert("同步失敗，請確認密碼是否正確");
