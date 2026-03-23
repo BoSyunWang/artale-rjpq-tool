@@ -236,7 +236,7 @@ body {
     align-items: center;
 }
 
-.floor-label, .title_column, .door-btn {
+.floor-label, .title_column {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -293,6 +293,13 @@ body {
     font-weight: bold;
     cursor: pointer;
     transition: all 0.2s ease;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.door-btn:active {
+    transform: scale(0.92);
+    filter: brightness(0.8);
 }
 
 .door-btn:hover {
