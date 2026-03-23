@@ -236,8 +236,8 @@ function bindTileEvents(btn, f, p) {
     btn.addEventListener('mouseup', cancel);
     btn.addEventListener('mouseleave', () => clearTimeout(timer));
 
-    btn.addEventListener('touchstart', start, { passive: true });
-    btn.addEventListener('touchend', cancel, { passive: true });
+    //btn.addEventListener('touchstart', start, { passive: true });
+    //btn.addEventListener('touchend', cancel, { passive: true });
 
     btn.addEventListener('contextmenu', e => e.preventDefault());
 }
