@@ -206,7 +206,7 @@ const updateDebug = (msg) => {
     if (!debugBox) return;
 
     eventLogs.unshift(`${new Date().getMilliseconds()}ms: ${msg}`);
-    if (eventLogs.length > 3) eventLogs.pop();
+    if (eventLogs.length > 6) eventLogs.pop();
 
     debugBox.innerHTML = eventLogs.join('<br>');
 };
@@ -217,6 +217,7 @@ function bindTileEvents(btn, f, p) {
 
     const start = (e) => {
         isLongPress = false;
+        updateDebug(`${e.type} - LONG PRESS 觸發`);
         timer = setTimeout(() => {
             isLongPress = true;
             handleFlagToggle(f, p);
