@@ -293,7 +293,8 @@ body {
     font-weight: bold;
     cursor: pointer;
     transition: all 0.2s ease;
-    user-select: none;
+    user-select: none !important;
+    -webkit-user-select: none !important;
     -webkit-tap-highlight-color: transparent;
 }
 
