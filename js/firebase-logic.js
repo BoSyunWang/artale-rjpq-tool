@@ -266,7 +266,7 @@ async function updateUI(roomState) {
     }
 }
 
-async function handleTileClaim(floor, platform) {
+async function handleTileClaim(floor, platform, forcedUserId = null) {
     const floorPath = `rooms/${currentRoom}/room_state/f${floor}`;
     const targetPath = `${floorPath}/p${platform}`;
     const allPlayerIds = Array.from(document.querySelectorAll('input[name="p-select"]'))
@@ -276,10 +276,11 @@ async function handleTileClaim(floor, platform) {
         const floorData = floorSnapshot.val() || {};
         const updates = {};
         updates[`rooms/${currentRoom}/metadata/password`] = currentPass;
-        const myId = currentUser.toString();
+        const targetUser = forcedUserId !== null ? forcedUserId : currentUser;
+        const myId = targetUser.toString();
 
         const currentTargetOwner = floorData[`p${platform}`]?.owner?.toString() || "-1";
-        if (currentTargetOwner === myId) {
+        if (currentTargetOwner === myId && !forcedUserId) {
             updates[`${targetPath}/owner`] = "-1";
             updates[`${floorPath}/p${platform}/autogen`] = false;
         } else {
@@ -360,6 +361,14 @@ async function handleFlagToggle(floor, platform) {
         updates[`rooms/${currentRoom}/metadata/password`] = currentPass;
         updates[`rooms/${currentRoom}/room_state/f${floor}/p${platform}/flags`] = currentFlags;
         await update(ref(db), updates);
+
+        const activeFlagsCount = currentFlags.filter(f => f === true).length;
+        if (activeFlagsCount === 3) {
+            const forcedUserIdIndex = currentFlags.findIndex(f => f === false);
+            if (forcedUserIdIndex !== -1) {
+                await handleTileClaim(floor, platform, forcedUserIdIndex);
+            }
+        }
     } catch (e) {
         alert("同步失敗，請確認密碼是否正確");
     }
