@@ -199,6 +199,18 @@ function startListening() {
     });
 }
 
+let eventLogs = [];
+
+const updateDebug = (msg) => {
+    const debugBox = document.getElementById('debug-box');
+    if (!debugBox) return;
+
+    eventLogs.unshift(`${new Date().getMilliseconds()}ms: ${msg}`);
+    if (eventLogs.length > 3) eventLogs.pop();
+
+    debugBox.innerHTML = eventLogs.join('<br>');
+};
+
 function bindTileEvents(btn, f, p) {
     let timer;
     let isLongPress = false;
@@ -213,7 +225,7 @@ function bindTileEvents(btn, f, p) {
 
     const cancel = (e) => {
         clearTimeout(timer);
-        alert(e.type);
+        updateDebug(`CANCEL - ${e.type} (isLong: ${isLongPress})`);
         if (!isLongPress) {
             handleTileClaim(f, p);
         }
