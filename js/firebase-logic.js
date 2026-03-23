@@ -269,24 +269,74 @@ async function updateUI(roomState) {
 async function handleTileClaim(floor, platform) {
     const floorPath = `rooms/${currentRoom}/room_state/f${floor}`;
     const targetPath = `${floorPath}/p${platform}`;
+    const allPlayerIds = Array.from(document.querySelectorAll('input[name="p-select"]'))
+                          .map(radio => radio.value);
     try {
         const floorSnapshot = await get(ref(db, floorPath));
         const floorData = floorSnapshot.val() || {};
-
         const updates = {};
         updates[`rooms/${currentRoom}/metadata/password`] = currentPass;
         const myId = currentUser.toString();
-        const currentTargetOwner = floorData[`p${platform}`]?.owner?.toString() || "-1";
 
+        const currentTargetOwner = floorData[`p${platform}`]?.owner?.toString() || "-1";
         if (currentTargetOwner === myId) {
             updates[`${targetPath}/owner`] = "-1";
+            updates[`${floorPath}/p${platform}/autogen`] = false;
         } else {
             for (let pIdx = 1; pIdx <= 4; pIdx++) {
                 if (floorData[`p${pIdx}`]?.owner?.toString() === myId) {
                     updates[`${floorPath}/p${pIdx}/owner`] = "-1";
+                    updates[`${floorPath}/p${pIdx}/autogen`] = false;
                 }
             }
             updates[`${targetPath}/owner`] = myId;
+            updates[`${targetPath}/autogen`] = false;
+        }
+
+        let nextFloorState = {};
+        let nextAutogenState = {};
+        for (let i = 1; i <= 4; i++) {
+            const pKey = `p${i}`;
+            const fullPath = `${floorPath}/${pKey}/owner`;
+            const autoPath = `${floorPath}/${pKey}/autogen`;
+            if (fullPath in updates) {
+                nextFloorState[pKey] = updates[fullPath];
+                nextAutogenState[pKey] = updates[autoPath];
+            } else {
+                nextFloorState[pKey] = floorData[pKey]?.owner?.toString() || "-1";
+                nextAutogenState[pKey] = floorData[pKey]?.autogen || false;
+            }
+        }
+
+        const occupiedByHumans = Object.keys(nextFloorState).filter(key => {
+            const owner = nextFloorState[key];
+            const isAutogen = nextAutogenState[key];
+            return owner !== "-1" && isAutogen !== true;
+        });
+
+        const uniquePlayers = [...new Set(occupiedByHumans.map(key => nextFloorState[key]))];
+
+        if (uniquePlayers.length === 3) {
+            for (let i = 1; i <= 4; i++) {
+                if (nextAutogenState[`p${i}`]) {
+                    updates[`${floorPath}/p${i}/owner`] = "-1";
+                    updates[`${floorPath}/p${i}/autogen`] = false;
+                    nextFloorState[`p${i}`] = "-1";
+                }
+            }
+            const missingPlayer = allPlayerIds.find(id => !uniquePlayers.includes(id));
+            const targetPlatformKey = Object.keys(nextFloorState).find(key => nextFloorState[key] === "-1");
+            if (targetPlatformKey) {
+                updates[`${floorPath}/${targetPlatformKey}/owner`] = missingPlayer;
+                updates[`${floorPath}/${targetPlatformKey}/autogen`] = true;
+            }
+        } else {
+            for (let i = 1; i <= 4; i++) {
+                if (floorData[`p${i}`]?.autogen === true) {
+                    updates[`${floorPath}/p${i}/owner`] = "-1";
+                    updates[`${floorPath}/p${i}/autogen`] = false;
+                }
+            }
         }
         await update(ref(db), updates);
     } catch (e) {
