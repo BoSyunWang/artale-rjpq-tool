@@ -44,16 +44,28 @@
 4. **設定安全性規則**：
    - 回到 Realtime Database 的 **Rules** 標籤頁，貼入以下代碼：
    ```json
-   {
-     "rules": {
-       "rooms": {
-         "$room_id": {
-           ".read": "true",
-           ".write": "true"
-         }
-       }
-     }
-   }
+    {
+      "rules": {
+        "rooms": {
+          ".read":false,
+          "$roomId": {
+            ".read":true,
+            "metadata": {
+              ".read": false,
+              ".write": "!data.exists() || newData.child('password').val() == data.child('password').val()"
+            },
+            "room_state": {
+              ".read": true,
+              ".write": "newData.parent().child('metadata/password').val() == data.parent().child('metadata/password').val()"
+            },
+            "user_configs": {
+              ".read": true,
+              ".write": "newData.parent().child('metadata/password').val() == data.parent().child('metadata/password').val()"
+            }
+          }
+        }
+      }
+    }
 
 ---
 
