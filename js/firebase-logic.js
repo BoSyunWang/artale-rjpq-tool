@@ -201,23 +201,12 @@ function startListening() {
 
 let eventLogs = [];
 
-const updateDebug = (msg) => {
-    const debugBox = document.getElementById('debug-box');
-    if (!debugBox) return;
-
-    eventLogs.unshift(`${new Date().toLocaleTimeString()}: ${msg}`);
-    if (eventLogs.length > 12) eventLogs.pop();
-
-    debugBox.innerHTML = eventLogs.join('<br>');
-};
-
 function bindTileEvents(btn, f, p) {
     let timer;
     let isLongPress = false;
 
     const start = (e) => {
         isLongPress = false;
-        updateDebug(`${e.type} - LONG PRESS 觸發`);
         timer = setTimeout(() => {
             isLongPress = true;
             handleFlagToggle(f, p);
@@ -225,9 +214,11 @@ function bindTileEvents(btn, f, p) {
     };
 
     const cancel = (e) => {
+        if(e.type === 'touchend') {
+            if(e.cancelable) e.preventDefault();
+        }
         clearTimeout(timer);
-        updateDebug(`CANCEL - ${e.type} (isLong: ${isLongPress})`);
-        if (!isLongPress && e.type === 'mouseup') {
+        if (!isLongPress) {
             handleTileClaim(f, p);
         }
     };
@@ -236,8 +227,8 @@ function bindTileEvents(btn, f, p) {
     btn.addEventListener('mouseup', cancel);
     btn.addEventListener('mouseleave', () => clearTimeout(timer));
 
-    //btn.addEventListener('touchstart', start, { passive: true });
-    //btn.addEventListener('touchend', cancel, { passive: true });
+    btn.addEventListener('touchstart', start, { passive: false });
+    btn.addEventListener('touchend', cancel, { passive: false });
 
     btn.addEventListener('contextmenu', e => e.preventDefault());
 }
