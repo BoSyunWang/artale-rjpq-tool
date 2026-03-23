@@ -213,7 +213,8 @@ function bindTileEvents(btn, f, p) {
 
     const cancel = (e) => {
         clearTimeout(timer);
-        if (!isLongPress && e.type === 'mouseup') {
+        alert(e.type);
+        if (!isLongPress) {
             handleTileClaim(f, p);
         }
     };
