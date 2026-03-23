@@ -293,10 +293,12 @@ body {
     font-weight: bold;
     cursor: pointer;
     transition: all 0.2s ease;
-    user-select: none;
-    -webkit-user-select: none;
-    -webkit-touch-callout: none;
+    user-select: none !important;
+    -webkit-user-select: none !important;
+    -webkit-touch-callout: none !important;
     -webkit-tap-highlight-color: transparent;
+    -webkit-user-drag: none !important;
+    outline: none !important;
     touch-action: manipulation;
 }
 
