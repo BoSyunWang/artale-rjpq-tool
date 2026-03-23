@@ -207,16 +207,13 @@ function bindTileEvents(btn, f, p) {
         isLongPress = false;
         timer = setTimeout(() => {
             isLongPress = true;
-            console.log("timer triggered");
             handleFlagToggle(f, p);
         }, 300);
     };
 
     const cancel = (e) => {
         clearTimeout(timer);
-        console.log("cancle event", isLongPress, e.type);
-        if (!isLongPress) {
-            console.log("triggered handleTileClaim");
+        if (!isLongPress && e.type === 'mouseup') {
             handleTileClaim(f, p);
         }
     };
