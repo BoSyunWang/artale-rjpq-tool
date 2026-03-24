@@ -235,7 +235,23 @@ function bindTileEvents(btn, f, p) {
 
 async function updateUI(roomState) {
     lastUpdateTime.innerText = new Date().toLocaleTimeString();
+
+    const validOwners = ["0", "1", "2", "3"];
+
     for (let f = 1; f <= 10; f++) {
+        const floorOwners = new Set();
+
+        for (let pCheck = 1; pCheck <= 4; pCheck++) {
+            const checkData = roomState[`f${f}`]?.[`p${pCheck}`];
+            const ownerStr = checkData?.owner?.toString();
+
+            if (ownerStr !== undefined && validOwners.includes(ownerStr)) {
+                floorOwners.add(ownerStr);
+            }
+        }
+
+        const isAllOccupied = (floorOwners.size === validOwners.length);
+
         for (let p = 1; p <= 4; p++) {
             const data = roomState[`f${f}`]?.[`p${p}`];
             if (!data) continue;
@@ -243,29 +259,20 @@ async function updateUI(roomState) {
             const tileId = `${f}-${p}`;
 
             const btn = document.getElementById(`b-${tileId}`);
-            if (data.owner && ["0", "1", "2", "3"].includes(data.owner.toString())) {
+            if (data.owner && validOwners.includes(data.owner.toString())) {
                 btn.style.backgroundColor = `var(--p${Number(data.owner) + 1})`;
             } else {
                 btn.style.backgroundColor = `var(--input-bg)`;
             }
 
-            if (data && data.flags && Array.isArray(data.flags)) {
-                data.flags.forEach((isTrue, index) => {
-                    const playerNum = index;
-                    const light = document.getElementById(`light-${tileId}-p${playerNum + 1}`);
-                    if (light) {
-                        if (isTrue) {
-                            light.classList.add('active');
-                        } else {
-                            light.classList.remove('active');
-                        }
-                    }
-                });
-            } else {
-                for (let p = 1; p <= 4; p++) {
-                    const light = document.getElementById(`light-${tileId}-p${p}`);
-                    if (light) light.classList.remove('active');
-                }
+            for (let playerIndex = 0; playerIndex < 4; playerIndex++) {
+                const light = document.getElementById(`light-${tileId}-p${playerIndex + 1}`);
+                if (!light) continue;
+
+                const isActive = Array.isArray(data.flags) && data.flags[playerIndex] === true;
+
+                light.classList.toggle('active', isActive);
+                light.classList.toggle('darkdim', isAllOccupied);
             }
         }
     }

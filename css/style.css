@@ -280,6 +280,11 @@ body {
 .status-light.active.p3 { background: var(--p3); box-shadow: 0 0 5px var(--p3); }
 .status-light.active.p4 { background: var(--p4); box-shadow: 0 0 5px var(--p4); }
 
+.status-light.active.darkdim.p1 { filter: brightness(0.4) saturate(0.5); box-shadow: none; transition: filter 0.3s ease; }
+.status-light.active.darkdim.p2 { filter: brightness(0.4) saturate(0.5); box-shadow: none; transition: filter 0.3s ease; }
+.status-light.active.darkdim.p3 { filter: brightness(0.4) saturate(0.5); box-shadow: none; transition: filter 0.3s ease; }
+.status-light.active.darkdim.p4 { filter: brightness(0.4) saturate(0.5); box-shadow: none; transition: filter 0.3s ease; }
+
 .door-btn {
     flex: 2;
     width: 100%;
