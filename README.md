@@ -69,6 +69,14 @@
 
 ---
 
+```mermaid
+graph TD;
+    A-->B;
+    A-->C;
+    B-->D;
+    C-->D;
+```
+
 ## 🤖 技術與致謝 (Technical Attribution)
 
 - **核心架構**：由 **Google Gemini** 協助產出，採用模組化設計（Frontend/Backend Separation）。
